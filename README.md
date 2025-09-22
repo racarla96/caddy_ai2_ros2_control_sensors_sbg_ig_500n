@@ -1,4 +1,4 @@
-# caddy_ai2_sensors_SBG_IG-500N
+# Caddy AI2 ROS2 Control Sensors SBG IG-500N
 
 Este repositorio tiene el objetivo de guardar los documentos, CADs, programas, código del sensor y tener un driver funcional para ROS 2.
 
