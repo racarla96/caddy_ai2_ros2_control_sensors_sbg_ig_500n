@@ -1,7 +1,0 @@
-sbg_node:
-  ros__parameters:
-    port: /dev/sbg
-    baudrate: 921600
-    imu_frame_id: imu
-    gps_frame_id: gps
-    frequency: 500

@@ -1,0 +1,12 @@
+<library path="sbg_hardware_interface">
+  <class
+    name="caddy_ai2_ros2_control_sensors_sbg_ig500n/SbgHardwareInterface"
+    type="caddy_ai2_ros2_control_sensors_sbg_ig500n::SbgHardwareInterface"
+    base_class_type="hardware_interface::SensorInterface">
+    <description>
+      ros2_control hardware interface for the SBG IG-500N IMU+GPS sensor.
+      Exposes imu_sensor (orientation, angular_velocity, linear_acceleration)
+      and navsat_sensor (latitude, longitude, altitude) state interfaces.
+    </description>
+  </class>
+</library>

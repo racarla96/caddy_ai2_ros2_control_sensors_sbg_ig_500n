@@ -1,0 +1,26 @@
+# SBG IG-500N — parámetros operativos (IMU + GPS integrado)
+# Physical constants (mass, inertia, dimensions, noise) are hardcoded in sensor.sdf.j2.
+#
+# La pose de montaje (x, y, z, roll, pitch, yaw) y parent_link
+# se proveen externamente mediante argumentos del launch.
+
+hardware:
+  frame_id: imu_link
+  weight: 0.26
+
+operation:
+  port: "/dev/sbg"
+  baudrate: 921600
+  imu_frame_id: "imu_link"
+  navsat_frame_id: "navsat_link"
+  frequency: 500
+
+simulation:
+  update_rate: 100
+  noise:
+    gyro:
+      mean: 0.0
+      stddev: 0.001
+    accel:
+      mean: 0.0
+      stddev: 0.01
