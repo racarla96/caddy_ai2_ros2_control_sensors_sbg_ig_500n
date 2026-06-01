@@ -1,0 +1,68 @@
+{#-
+  URDF fragment: link + visual + joint for SBG IG-500N IMU.
+  When gazebo=true, also injects the Gazebo IMU sensor plugin.
+
+  Physical dimensions: 46 mm × 45 mm × 21 mm, mass 0.26 kg.
+  Link origin at the center of the sensor body (mounting point).
+
+  Variables always required:
+    prefix, sensor_name, frame_id,
+    x, y, z, roll, pitch, yaw  (pose relative to base_footprint),
+    sensor_share               (absolute path to this package's share dir)
+
+  Additional variables required only when gazebo=true:
+    namespace, update_rate,
+    noise_enabled, gyro_mean, gyro_stddev, accel_mean, accel_stddev
+#}
+
+  <link name="{{ prefix }}{{ frame_id }}">
+    <inertial>
+      <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+      <mass value="0.26"/>
+      <inertia ixx="0.0000534" ixy="0" ixz="0"
+               iyy="0.0000554" iyz="0"
+               izz="0.0000897"/>
+    </inertial>
+    <visual>
+      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+      <geometry>
+        <mesh filename="file://{{ sensor_share }}/description/IG-500N-B.STL"/>
+      </geometry>
+    </visual>
+  </link>
+
+  <joint name="{{ prefix }}{{ sensor_name }}_joint" type="fixed">
+    <parent link="{{ prefix }}base_footprint"/>
+    <child link="{{ prefix }}{{ frame_id }}"/>
+    <origin xyz="{{ x }} {{ y }} {{ z }}" rpy="{{ roll }} {{ pitch }} {{ yaw }}"/>
+  </joint>
+
+  <gazebo reference="{{ prefix }}{{ sensor_name }}_joint">
+    <preserveFixedJoint>true</preserveFixedJoint>
+  </gazebo>
+
+{%- if gazebo | default(false) %}
+
+  <gazebo reference="{{ prefix }}{{ frame_id }}">
+    <sensor name="{{ prefix }}sbg_ig_500n" type="imu">
+      <topic>{{ ('/' + namespace + '/') if namespace else '/' }}imu</topic>
+      <update_rate>{{ update_rate }}</update_rate>
+      <imu>
+{%- if noise_enabled %}
+        <angular_velocity>
+          <x><noise type="gaussian"><mean>{{ gyro_mean | default(0.0) }}</mean><stddev>{{ gyro_stddev | default(0.001) }}</stddev></noise></x>
+          <y><noise type="gaussian"><mean>{{ gyro_mean | default(0.0) }}</mean><stddev>{{ gyro_stddev | default(0.001) }}</stddev></noise></y>
+          <z><noise type="gaussian"><mean>{{ gyro_mean | default(0.0) }}</mean><stddev>{{ gyro_stddev | default(0.001) }}</stddev></noise></z>
+        </angular_velocity>
+        <linear_acceleration>
+          <x><noise type="gaussian"><mean>{{ accel_mean | default(0.0) }}</mean><stddev>{{ accel_stddev | default(0.01) }}</stddev></noise></x>
+          <y><noise type="gaussian"><mean>{{ accel_mean | default(0.0) }}</mean><stddev>{{ accel_stddev | default(0.01) }}</stddev></noise></y>
+          <z><noise type="gaussian"><mean>{{ accel_mean | default(0.0) }}</mean><stddev>{{ accel_stddev | default(0.01) }}</stddev></noise></z>
+        </linear_acceleration>
+{%- endif %}
+      </imu>
+      <always_on>true</always_on>
+    </sensor>
+  </gazebo>
+{%- endif %}
+

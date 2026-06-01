@@ -1,97 +1,106 @@
-# Caddy AI2 ROS2 Control Sensors SBG IG-500N
+# caddy_ai2_ros2_control_sensors_sbg_ig_500n
 
-Este repositorio tiene el objetivo de guardar los documentos, CADs, programas, código del sensor y tener un driver funcional para ROS 2.
+**ROS 2:** Jazzy | **Gazebo:** Harmonic | **Sensor:** SBG IG-500N (IMU + AHR)
 
-## Requisito visualización con rviz2 ¿Parece que no funciona?
+Driver ROS 2 + hardware interface ros2_control + fragmento URDF inyectable para Gazebo Harmonic de la IMU SBG IG-500N. Los parámetros operativos se centralizan en `config/sensor_params.yaml`. El SDK propietario `sbgCom` se incluye como fuente vendored en `sdk/`.
 
-- https://gitlab.com/boldhearts/ros2_imu_tools
-```bash
-sudo apt-get install ros-humble-imu-tools
+---
+
+## Estructura
+
+```
+caddy_ai2_ros2_control_sensors_sbg_ig_500n/
+├── code/src/
+│   ├── sbg_node.cpp                      # Nodo driver ROS 2
+│   └── sbg_hardware_interface.cpp        # Hardware interface ros2_control
+├── config/
+│   ├── sensor_params.yaml                # Parámetros operativos
+│   └── sbg_node_params.yaml.j2           # Template Jinja2 → parámetros del nodo
+├── description/
+│   ├── sensor.urdf.j2                    # Fragmento URDF inyectable (Jinja2)
+│   └── IG-500N-B.STL                     # Malla 3D
+├── sdk/sbgCom/                           # SDK SBG (vendored)
+├── startup/
+│   └── initenv.sh                        # Udev rule — crea /dev/sbg
+└── sbg_hardware_interface_plugin.xml     # Descripción del plugin ros2_control
 ```
 
-## Instalación del driver
+---
+
+## Instalación del SDK
 
 ```bash
-cd caddy_ai2_sensors_SBG_IG-500N/sdk/sbgCom/
-mkdir build
-cd build
-# Si la arquitectura es BIG_ENDIAN: cmake -DSBG_PLATFORM_ENDIANNESS=BIG ..
-cmake .. 
-make
-sudo make install
+cd sdk/sbgCom/
+mkdir build && cd build
+cmake ..    # En BIG_ENDIAN: cmake -DSBG_PLATFORM_ENDIANNESS=BIG ..
+make && sudo make install
 ```
 
-### Instalar un alias al puerto serie de la IMU
+### Alias del puerto serie
 
 ```bash
-cd caddy_ai2_sensors_SBG_IG-500N/startup
-sudo chmod +x initenv.sh
-sudo sh initenv.sh
+cd startup/
+sudo chmod +x initenv.sh && sudo sh initenv.sh
+# Reconectar el dispositivo y verificar:
+ls -la /dev/sbg
 ```
 
-Si estaba conectado previamente, conectar y desconectar y comprobar que efectivamente aparece el nombre de sbg
+---
+
+## Build
 
 ```bash
-ls -la /dev/
+colcon build --packages-select caddy_ai2_ros2_control_sensors_sbg_ig_500n
+source install/setup.bash
 ```
 
-## ROS 2 Driver
+---
 
-El driver para ROS 2 para este sensor esta basado en el driver de https://github.com/YDLIDAR/ydlidar_ros2 y https://github.com/racarla96/caddy_ai2_sensors_SICK_LMS291-S05..
+## Parámetros (`config/sensor_params.yaml`)
 
-### Cómo construir el paquete
+| Parámetro | Descripción |
+|---|---|
+| `frame_id` | Frame TF del sensor (`imu_sbg_ig500n_link`) |
+| `port` | Puerto serie del dispositivo |
+| `baudrate` | Velocidad de comunicación (bps) |
+| `update_rate` | Frecuencia de publicación (Hz) |
 
-0) Abre una terminal y dirígete al workspace de ROS 2 o crea uno.
-1) Clona este proyecto en la carpeta src del espacio de trabajo.
-```bash
-git clone https://github.com/racarla96/caddy_ai2_sensors_SBG_IG-500N.git
-```
-2) Ve a la raíz del workspace y compila el espacio de trabajo.
-```bash
-colcon build # colcon build --cmake-args -DCMAKE_CXX_FLAGS="-w"
-```
+---
 
-## Cómo ejecutar el paquete
+## Integración en un robot padre
 
-### 1. Ejecute el nodo y visualícelo usando la aplicación de prueba.
+El paquete expone `description/sensor.urdf.j2` como fragmento URDF inyectable. Se usa via el helper del robot padre para insertar el link, joint y sensor Gazebo en el URDF del robot.
 
-```bash
-ros2 run sbg sbg_node
-ros2 run sbg sbg_client
+### Dependencia en `package.xml` del robot padre
+
+```xml
+<exec_depend>caddy_ai2_ros2_control_sensors_sbg_ig_500n</exec_depend>
 ```
 
-### 2.Ejecute el nodo y visualícelo usando la aplicación de prueba al iniciar
+### Bridge en el robot padre (`gz_msg_bridge.yaml.j2`)
 
-```bash
-ros2 launch sbg sbg_launch.py
+```yaml
+- ros_topic_name: "{{ ns_prefix }}imu"
+  gz_topic_name:  "{{ ns_prefix }}imu"
+  ros_type_name:  "sensor_msgs/msg/Imu"
+  gz_type_name:   "gz.msgs.IMU"
+  direction:      "GZ_TO_ROS"
+  frame_id:       "{{ prefix }}imu_sbg_ig500n_link"
 ```
 
-Con rviz2 podemos ver la salida de la imu.
+---
 
-## Paquete Oficial
+## Topic publicado
 
-### Testear la IMU con el paquete oficial
+| Topic | Tipo | frame_id |
+|---|---|---|
+| `/{namespace}/imu` | `sensor_msgs/msg/Imu` | `{prefix}imu_sbg_ig500n_link` |
 
-```bash
-cd caddy_ai2_sensors_SBG_IG-500N/docs_official/SDK_3.2/USB/IG-Devices/Software\ Development/sbgCom/
-cd projects/unix/
-chmod +x build.sh
-sudo ./build.sh SBG_PLATFORM_LITTLE_ENDIAN
-```
-### Como probar los ejemplos
+---
 
-```bash
-cd ../../../Examples/ig500Continuous/
-sed -i 's/\(sbgComInit("\)COM6\(", 115200, &protocolHandle) == SBG_NO_ERROR\)/\1\/dev\/ttyUSB0\2/' src/ig500Continuous.c
-chmod +x projects/unix/build.sh
-sudo ./projects/unix/build.sh
-```
+## Dependencias
 
-Nota: Ajuste /dev/ttyUSB0 según el puerto serie de su dispositivo. Para ver los dispositivos dispositivos recientemente conectados puedes usar:
-
-```bash
-sudo dmesg | grep tty
-```
-
-## TODOs
-- [ ] Implementar uno o varios launch, uno con soporte para rviz2
+- **ROS 2:** `rclcpp`, `sensor_msgs`, `tf2`
+- **Python (launch):** `jinja2`, `pyyaml`
+- **Sistema:** sbgCom SDK (incluido en `sdk/`)
+- **Build:** `ament_cmake`

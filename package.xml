@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>sbg</name>
+  <name>caddy_ai2_ros2_control_sensors_sbg_ig_500n</name>
   <version>1.0.0</version>
   <description>
     SBG IG-500N sensor nodes
