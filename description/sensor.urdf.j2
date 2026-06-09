@@ -1,19 +1,21 @@
 {#-
-  URDF fragment: link + visual + joint for SBG IG-500N IMU.
-  When gazebo=true, also injects the Gazebo IMU sensor plugin.
-
-  Physical dimensions: 46 mm × 45 mm × 21 mm, mass 0.26 kg.
-  Link origin at the center of the sensor body (mounting point).
+  URDF fragment for SBG IG-500N: handles both the IMU body and the GPS antenna.
+  Dispatch is done via sensor_type ('imu' or 'gps').
 
   Variables always required:
-    prefix, sensor_name, frame_id,
+    prefix, sensor_name, sensor_type, frame_id,
     x, y, z, roll, pitch, yaw  (pose relative to base_footprint),
     sensor_share               (absolute path to this package's share dir)
 
-  Additional variables required only when gazebo=true:
+  Additional variables required only when gazebo=true + sensor_type=='imu':
     namespace, update_rate,
     noise_enabled, gyro_mean, gyro_stddev, accel_mean, accel_stddev
+
+  Additional variables required only when gazebo=true + sensor_type=='gps':
+    namespace, update_rate
 #}
+
+{%- if sensor_type == 'imu' %}
 
   <link name="{{ prefix }}{{ frame_id }}">
     <inertial>
@@ -26,7 +28,7 @@
     <visual>
       <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
       <geometry>
-        <mesh filename="file://{{ sensor_share }}/description/IG-500N-B.STL"/>
+        <mesh filename="file://{{ sensor_share }}/description/IG-500N-B.STL" scale="0.001 0.001 0.001"/>
       </geometry>
     </visual>
   </link>
@@ -64,5 +66,46 @@
       <always_on>true</always_on>
     </sensor>
   </gazebo>
+{%- endif %}
+
+{%- elif sensor_type == 'gps' %}
+
+  <link name="{{ prefix }}{{ frame_id }}">
+    <inertial>
+      <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+      <mass value="0.05"/>
+      <inertia ixx="0.000001" ixy="0" ixz="0"
+               iyy="0.000001" iyz="0"
+               izz="0.000001"/>
+    </inertial>
+    <visual>
+      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+      <geometry>
+        <box size="0.05 0.05 0.02"/>
+      </geometry>
+    </visual>
+  </link>
+
+  <joint name="{{ prefix }}{{ sensor_name }}_joint" type="fixed">
+    <parent link="{{ prefix }}base_footprint"/>
+    <child link="{{ prefix }}{{ frame_id }}"/>
+    <origin xyz="{{ x }} {{ y }} {{ z }}" rpy="{{ roll }} {{ pitch }} {{ yaw }}"/>
+  </joint>
+
+  <gazebo reference="{{ prefix }}{{ sensor_name }}_joint">
+    <preserveFixedJoint>true</preserveFixedJoint>
+  </gazebo>
+
+{%- if gazebo | default(false) %}
+
+  <gazebo reference="{{ prefix }}{{ frame_id }}">
+    <sensor name="{{ prefix }}navsat_generic" type="navsat">
+      <topic>{{ ('/' + namespace + '/') if namespace else '/' }}navsat</topic>
+      <update_rate>{{ update_rate }}</update_rate>
+      <always_on>true</always_on>
+    </sensor>
+  </gazebo>
+{%- endif %}
+
 {%- endif %}
 

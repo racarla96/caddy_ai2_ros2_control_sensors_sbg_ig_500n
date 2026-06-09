@@ -17,6 +17,7 @@ operation:
 
 simulation:
   update_rate: 100
+  gps_update_rate: 5
   noise:
     gyro:
       mean: 0.0

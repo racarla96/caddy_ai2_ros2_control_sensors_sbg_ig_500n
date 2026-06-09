@@ -51,7 +51,9 @@ else()
                   "Install the SBG SDK to /usr/local.")
 endif()
 
-install(DIRECTORY config description
+install(DIRECTORY config
+  DESTINATION share/${PROJECT_NAME}/bringup)
+install(DIRECTORY description
   DESTINATION share/${PROJECT_NAME})
 
 if(BUILD_TESTING)
