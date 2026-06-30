@@ -26,7 +26,7 @@
                izz="0.0000897"/>
     </inertial>
     <visual>
-      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+      <origin xyz="0.0227 0.025 -0.011" rpy="1.5708 0.0 -1.5708"/>
       <geometry>
         <mesh filename="file://{{ sensor_share }}/description/IG-500N-B.STL" scale="0.001 0.001 0.001"/>
       </geometry>
@@ -47,7 +47,7 @@
 
   <gazebo reference="{{ prefix }}{{ frame_id }}">
     <sensor name="{{ prefix }}sbg_ig_500n" type="imu">
-      <topic>{{ ('/' + namespace + '/') if namespace else '/' }}imu</topic>
+      <topic>{{ ('/' + namespace + '/') if namespace else '/' }}sbg_ig500n/imu</topic>
       <update_rate>{{ update_rate }}</update_rate>
       <imu>
 {%- if noise_enabled %}
@@ -99,8 +99,8 @@
 {%- if gazebo | default(false) %}
 
   <gazebo reference="{{ prefix }}{{ frame_id }}">
-    <sensor name="{{ prefix }}navsat_generic" type="navsat">
-      <topic>{{ ('/' + namespace + '/') if namespace else '/' }}navsat</topic>
+    <sensor name="{{ prefix }}gps_sbg_ig500n" type="navsat">
+      <topic>{{ ('/' + namespace + '/') if namespace else '/' }}sbg_ig500n/navsat</topic>
       <update_rate>{{ update_rate }}</update_rate>
       <always_on>true</always_on>
     </sensor>

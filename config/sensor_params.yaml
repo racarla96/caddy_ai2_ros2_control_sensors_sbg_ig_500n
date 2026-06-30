@@ -5,14 +5,14 @@
 # se proveen externamente mediante argumentos del launch.
 
 hardware:
-  frame_id: imu_link
+  frame_id: imu_sbg_ig500n_link
   weight: 0.26
 
 operation:
   port: "/dev/sbg"
   baudrate: 921600
-  imu_frame_id: "imu_link"
-  navsat_frame_id: "navsat_link"
+  imu_frame_id: "imu_sbg_ig500n_link"
+  navsat_frame_id: "gps_sbg_ig500n_link"
   frequency: 500
 
 simulation:
