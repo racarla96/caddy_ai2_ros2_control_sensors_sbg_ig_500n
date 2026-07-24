@@ -4,7 +4,7 @@
 
   Variables always required:
     prefix, sensor_name, sensor_type, frame_id,
-    x, y, z, roll, pitch, yaw  (pose relative to base_footprint),
+    x, y, z, roll, pitch, yaw  (pose relative to base_link),
     sensor_share               (absolute path to this package's share dir)
 
   Additional variables required only when gazebo=true + sensor_type=='imu':
@@ -34,7 +34,7 @@
   </link>
 
   <joint name="{{ prefix }}{{ sensor_name }}_joint" type="fixed">
-    <parent link="{{ prefix }}base_footprint"/>
+    <parent link="{{ prefix }}base_link"/>
     <child link="{{ prefix }}{{ frame_id }}"/>
     <origin xyz="{{ x }} {{ y }} {{ z }}" rpy="{{ roll }} {{ pitch }} {{ yaw }}"/>
   </joint>
@@ -87,7 +87,7 @@
   </link>
 
   <joint name="{{ prefix }}{{ sensor_name }}_joint" type="fixed">
-    <parent link="{{ prefix }}base_footprint"/>
+    <parent link="{{ prefix }}base_link"/>
     <child link="{{ prefix }}{{ frame_id }}"/>
     <origin xyz="{{ x }} {{ y }} {{ z }}" rpy="{{ roll }} {{ pitch }} {{ yaw }}"/>
   </joint>
